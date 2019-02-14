@@ -148,3 +148,22 @@ def mean_of_artist_columns_to_df(artists,song_df):
     column_name = np.append('artist_name', the_mean.index)
     return pd.DataFrame(values, columns=column_name)
 
+def create_subplots_songFeatures(dataFrame,column_names,png_name):   
+    '''
+    Function to create sub-regplots from a given DataFrame and specified 
+    columns. You pass the DataFrame, the list of column names, and the name
+    of the png file it will be saved as.
+    '''
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=0.4, wspace=0.2)
+    col_len = len(column_names)
+    nrows = (col_len//3)+1
+    for i in range(1, col_len):
+        ax = fig.add_subplot(nrows, 3, i)
+        #plt.figure(figsize=(10,3))
+        #ax.text(0.5, 0.5, str((4, 3, i)), fontsize=18, ha='center')
+        sns.regplot(x='song_popularity', y=column_names[i], data= dataFrame).set_title(f'song_popularity vs {column_names[i]}')
+        fig.set_size_inches(35.5, 25.5)
+        fig.subplots_adjust(hspace=0.2)
+    fig.savefig(png_name)
+    plt.show()
