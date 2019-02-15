@@ -5,10 +5,14 @@ import spotipy
 import json
 import time
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 female_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DX82tVoNhkbcO'
 male_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DWSsIr3Vjy37l'
 =======
+=======
+
+>>>>>>> 10f6945dc47c3ea3dec995e8d8784013586db533
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -16,8 +20,11 @@ from scipy import stats
 import matplotlib
 import matplotlib.pyplot as plt
 
+<<<<<<< HEAD
 >>>>>>> fcca3d0aa3b15a38f9c0d019d362ccc723747ff0
 
+=======
+>>>>>>> 10f6945dc47c3ea3dec995e8d8784013586db533
 female_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DX82tVoNhkbcO'
 male_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DWSsIr3Vjy37l'
 
@@ -227,10 +234,15 @@ def create_subplots_boxplots(df,column_names):
     col_len = len(column_names)
     for i in column_names:
 <<<<<<< HEAD
+<<<<<<< HEAD
         song_features_df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
 =======
         df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
 >>>>>>> fcca3d0aa3b15a38f9c0d019d362ccc723747ff0
+=======
+        df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
+        song_features_df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
+>>>>>>> 10f6945dc47c3ea3dec995e8d8784013586db533
         plt.xticks(rotation=90)
     plt.show()
 
@@ -245,6 +257,7 @@ def count_genre_x_y(artists_attributes_df):
             genres.append(item)
     genre_counts = [[x,genres.count(x)] for x in set(genres)]
 <<<<<<< HEAD
+<<<<<<< HEAD
     return [*zip(*genre_counts)] #this returns two lists
     
     
@@ -252,3 +265,8 @@ def count_genre_x_y(artists_attributes_df):
     genre,counts = [*zip(*genre_counts)] #this returns two lists
     return list(genre),list(counts)
 >>>>>>> fcca3d0aa3b15a38f9c0d019d362ccc723747ff0
+=======
+
+    genre,counts = [*zip(*genre_counts)] #this returns two lists
+    return list(genre),list(counts)
+>>>>>>> 10f6945dc47c3ea3dec995e8d8784013586db533
