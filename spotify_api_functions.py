@@ -3,11 +3,34 @@ from spotipy import oauth2
 from spotipy.oauth2 import SpotifyClientCredentials
 import spotipy
 import json
+import time
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from scipy import stats
+import matplotlib
+import matplotlib.pyplot as plt
 
-playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DX82tVoNhkbcO'
 
+female_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DX82tVoNhkbcO'
+male_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DWSsIr3Vjy37l'
+
+
+def df_cols_to_numeric(cols_to_numeric,dataFrame):
+    '''
+    Takes a DataFrame and a list of columns, and returns the DataFrame with numeric
+    values in the specified columns.
+    '''
+    column_names = cols_to_numeric
+    dataFrame[column_names] = dataFrame[column_names].apply(pd.to_numeric)
+    return dataFrame
 
 def get_token_and_spotify(client_id, client_secret):
+    '''
+    Here we pass our spotify client id and client secret, this returns an 
+    authentification token to send requests to the spotify api with the 
+    following functions.
+    '''
     credentials = oauth2.SpotifyClientCredentials(
     client_id=client_id,
     client_secret=client_secret)
@@ -18,6 +41,10 @@ def get_token_and_spotify(client_id, client_secret):
     return spotify_token
 
 def get_artist_from_playlist(spotify_token, playlist_uri):
+    '''
+        This function takes a playlist uri (link) and returns all of the artists in the playlist. It then 
+        returns a list of the artist's name and the uri to their page.
+    '''
 
     uri = playlist_uri
     username = uri.split(':')[2]
@@ -31,7 +58,11 @@ def get_artist_from_playlist(spotify_token, playlist_uri):
     return l
 
 def get_artists_attributes(spotify_token,artists_name_and_url):
-    import time
+    '''
+    this takes the artists names and uris returned from the previous function get_artist_from_playlist()
+    and returns attributes about each artist, including: followers count, genres, uri, and artist popularity.
+    Returns a pandas Data Frame of all attributes, each artist represneted as a row.
+    '''
     list_dictionary = []
     for artist in artists_name_and_url:
         dict_artists = {}
@@ -39,15 +70,17 @@ def get_artists_attributes(spotify_token,artists_name_and_url):
         results = spotify_token.artist(urn)
         dict_artists['name'] = results['name']
         dict_artists['followers'] = results['followers']['total']
-        dict_artists['popularity'] = results['popularity']
+        dict_artists['artist_popularity'] = results['popularity']
         dict_artists['genres'] = results['genres']
         dict_artists['urn'] = urn
         list_dictionary.append(dict_artists)
-        time.sleep(2)
     return list_dictionary
 
 def get_artist_top_songs(spotify_token, artists_name_and_url):
-    import time
+    '''
+    this function takes the artist name and uri, uses the spotipy library and returns a list 
+    of the artists top songs. It then creates a dataframe with each row representing an artist.
+    '''
     
     list_dictionary = []
     for artist in artists_name_and_url:
@@ -66,18 +99,23 @@ def get_artist_top_songs(spotify_token, artists_name_and_url):
             dict_songs['track_name'].append(track['name'])
             dict_songs['popularity'].append(track['popularity'])
         list_dictionary.append(dict_songs)
-        time.sleep(1)
     return list_dictionary
 
 def get_song_features_artists(spotify_token,artists_top_songs):
-    import time 
+    
+    '''
+    this function uses spotipy and the spotify api to return the audio attributes of each song
+    by our top artists, and then creates a brand new data frame--each row corresponding to a song.
+    Each top artist only has ten (or less) top songs, which was gathered from our last function: 
+    get_artist_top_songs()
+    '''
     
     arists_song_features = []
     for i in artists_top_songs:
         artist = {}
         artist['artist_name'] = i['artist_name']
         artist['song_names'] = i['track_name']
-        artist['popularity'] = i['popularity']
+        artist['song_popularity'] = i['popularity']
         artist['acousticness'] = []
         artist['danceability'] = []
         artist['duration_ms'] = []
@@ -91,7 +129,7 @@ def get_song_features_artists(spotify_token,artists_top_songs):
         artist['tempo'] = []
         artist['time_signature'] = []
         artist['valence'] = []
-        for song in range(10):
+        for song in range(len(i['uri'])):
             uri = i['uri'][song]
             features = spotify_token.audio_features(uri)
             for feature in features:
@@ -112,7 +150,80 @@ def get_song_features_artists(spotify_token,artists_top_songs):
                 artist['tempo'].append(dict_test['tempo']) 
                 artist['time_signature'].append(dict_test['time_signature'])
                 artist['valence'].append(dict_test['valence'])
-                time.sleep(1)
         arists_song_features.append(artist)
     return arists_song_features
 
+def mean_of_artist_columns_to_df(artists,song_df): 
+    '''
+    this function takes the artists file created before with attributes such as followers and popularity,
+    and concatinates it with a new data frame of the mean audio features of each song by the artists 
+    '''
+    values = []
+    for i in artists:
+        the_mean = song_df[song_df['artist_name'] == i].mean()
+        values.append(np.append(i, the_mean.values))
+    column_name = np.append('artist_name', the_mean.index)
+    return pd.DataFrame(values, columns=column_name)
+
+def create_subplots_regplot(dataFrame,column_names,png_name):   
+    '''
+    Function to create sub-regplots from a given DataFrame and specified 
+    columns. You pass the DataFrame, the list of column names, and the name
+    of the png file it will be saved as.
+    '''
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=0.4, wspace=0.2)
+    col_len = len(column_names)
+    nrows = (col_len//3)+1
+    for i in range(1, col_len):
+        ax = fig.add_subplot(nrows, 3, i)
+        sns.regplot(x='song_popularity', y=column_names[i], data= dataFrame).set_title(f'song_popularity vs {column_names[i]}')
+        fig.set_size_inches(35.5, 25.5)
+        fig.subplots_adjust(hspace=0.2)
+    fig.savefig(png_name)
+    plt.show()
+
+def create_subplots_distplot(df,column_names,png_name):   
+    '''
+    Function to create sub-distplots from a given DataFrame and specified 
+    columns. You pass the DataFrame, the list of column names, and the name
+    of the png file it will be saved as.
+    '''
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=0.4, wspace=0.2)
+    col_len = len(column_names)
+    nrows = (col_len//4)+1
+    for i in column_names:
+        ax = fig.add_subplot(nrows, 4, column_names.index(i)+1)
+        sns.distplot(df[i]).set_title(f'Distribution of {i}')
+        fig.set_size_inches(35.5, 25.5)
+        fig.subplots_adjust(hspace=0.2)
+    fig.savefig(png_name)
+    plt.show()
+
+def create_subplots_boxplots(df,column_names):   
+    '''
+    Function to create sub-boxplots from a given DataFrame and specified 
+    columns. You pass the DataFrame, the list of column names and it will return
+    a box plot fig for each attribute.
+    '''
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=0.4, wspace=0.2)
+    col_len = len(column_names)
+    for i in column_names:
+        df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
+        plt.xticks(rotation=90)
+    plt.show()
+
+def count_genre_x_y(artists_attributes_df):
+    '''
+    This takes the artists attributes dataframe and returns two lists,
+    the genres and their corresponding counts.
+    '''
+    genres = []
+    for artist in artists_attributes_df['genres']:
+        for item in artist:
+            genres.append(item)
+    genre_counts = [[x,genres.count(x)] for x in set(genres)]
+    genre,counts = [*zip(*genre_counts)] #this returns two lists
+    return list(genre),list(counts)
