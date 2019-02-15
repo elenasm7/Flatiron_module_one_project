@@ -207,5 +207,17 @@ def create_subplots_boxplots(df,column_names):
         song_features_df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
         plt.xticks(rotation=90)
     plt.show()
+
+def count_genre_x_y(artists_attributes_df):
+    '''
+    This takes the artists attributes dataframe and returns two lists,
+    the genres and their corresponding counts.
+    '''
+    genres = []
+    for artist in artists_attributes_df['genres']:
+        for item in artist:
+            genres.append(item)
+    genre_counts = [[x,genres.count(x)] for x in set(genres)]
+    return [*zip(*genre_counts)] #this returns two lists
     
     
