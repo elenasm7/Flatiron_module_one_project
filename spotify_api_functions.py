@@ -5,9 +5,25 @@ import spotipy
 import json
 import time
 
+import pandas as pd
+import numpy as np
+import seaborn as sns
+from scipy import stats
+import matplotlib
+import matplotlib.pyplot as plt
+
 female_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DX82tVoNhkbcO'
 male_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DWSsIr3Vjy37l'
 
+
+def df_cols_to_numeric(cols_to_numeric,dataFrame):
+    '''
+    Takes a DataFrame and a list of columns, and returns the DataFrame with numeric
+    values in the specified columns.
+    '''
+    column_names = cols_to_numeric
+    dataFrame[column_names] = dataFrame[column_names].apply(pd.to_numeric)
+    return dataFrame
 
 def df_cols_to_numeric(cols_to_numeric,dataFrame):
     '''
@@ -204,6 +220,7 @@ def create_subplots_boxplots(df,column_names):
     fig.subplots_adjust(hspace=0.4, wspace=0.2)
     col_len = len(column_names)
     for i in column_names:
+        df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
         song_features_df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
         plt.xticks(rotation=90)
     plt.show()
@@ -218,6 +235,6 @@ def count_genre_x_y(artists_attributes_df):
         for item in artist:
             genres.append(item)
     genre_counts = [[x,genres.count(x)] for x in set(genres)]
-    return [*zip(*genre_counts)] #this returns two lists
-    
-    
+
+    genre,counts = [*zip(*genre_counts)] #this returns two lists
+    return list(genre),list(counts)
