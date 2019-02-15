@@ -8,6 +8,16 @@ import time
 female_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DX82tVoNhkbcO'
 male_playlist_uri = 'spotify:user:spotify:playlist:37i9dQZF1DWSsIr3Vjy37l'
 
+
+def df_cols_to_numeric(cols_to_numeric,dataFrame):
+    '''
+    Takes a DataFrame and a list of columns, and returns the DataFrame with numeric
+    values in the specified columns.
+    '''
+    column_names = cols_to_numeric
+    dataFrame[column_names] = dataFrame[column_names].apply(pd.to_numeric)
+    return dataFrame
+
 def get_token_and_spotify(client_id, client_secret):
     '''
     Here we pass our spotify client id and client secret, this returns an 
@@ -148,7 +158,7 @@ def mean_of_artist_columns_to_df(artists,song_df):
     column_name = np.append('artist_name', the_mean.index)
     return pd.DataFrame(values, columns=column_name)
 
-def create_subplots_songFeatures(dataFrame,column_names,png_name):   
+def create_subplots_regplot(dataFrame,column_names,png_name):   
     '''
     Function to create sub-regplots from a given DataFrame and specified 
     columns. You pass the DataFrame, the list of column names, and the name
@@ -160,10 +170,42 @@ def create_subplots_songFeatures(dataFrame,column_names,png_name):
     nrows = (col_len//3)+1
     for i in range(1, col_len):
         ax = fig.add_subplot(nrows, 3, i)
-        #plt.figure(figsize=(10,3))
-        #ax.text(0.5, 0.5, str((4, 3, i)), fontsize=18, ha='center')
         sns.regplot(x='song_popularity', y=column_names[i], data= dataFrame).set_title(f'song_popularity vs {column_names[i]}')
         fig.set_size_inches(35.5, 25.5)
         fig.subplots_adjust(hspace=0.2)
     fig.savefig(png_name)
     plt.show()
+
+def create_subplots_distplot(df,column_names,png_name):   
+    '''
+    Function to create sub-distplots from a given DataFrame and specified 
+    columns. You pass the DataFrame, the list of column names, and the name
+    of the png file it will be saved as.
+    '''
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=0.4, wspace=0.2)
+    col_len = len(column_names)
+    nrows = (col_len//4)+1
+    for i in column_names:
+        ax = fig.add_subplot(nrows, 4, column_names.index(i)+1)
+        sns.distplot(df[i]).set_title(f'Distribution of {i}')
+        fig.set_size_inches(35.5, 25.5)
+        fig.subplots_adjust(hspace=0.2)
+    fig.savefig(png_name)
+    plt.show()
+
+def create_subplots_boxplots(df,column_names):   
+    '''
+    Function to create sub-boxplots from a given DataFrame and specified 
+    columns. You pass the DataFrame, the list of column names and it will return
+    a box plot fig for each attribute.
+    '''
+    fig = plt.figure()
+    fig.subplots_adjust(hspace=0.4, wspace=0.2)
+    col_len = len(column_names)
+    for i in column_names:
+        song_features_df[[i,'artist_name']].boxplot(by='artist_name', figsize=(20,10))
+        plt.xticks(rotation=90)
+    plt.show()
+    
+    
